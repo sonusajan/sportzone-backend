@@ -41,7 +41,9 @@ exports.getProduct=async(req,res)=>{
      const existingProducts = await products.find()
      res.status(200).json(existingProducts)
     }catch(err){
-     res.status(500).json('Error',err)
+     res.status(500).json('Error')
+     console.log(err);
+     
   }
 }
 

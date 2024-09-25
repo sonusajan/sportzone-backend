@@ -79,3 +79,19 @@ exports.removeFromCart=async(req,res)=>{
       
         }
 }
+
+exports.clearCart = async(req,res)=>{
+    try{
+      console.log('inside delete cart');
+      const {uid} = req.params
+      const clearItems = await cart.findOneAndDelete({uid:uid})
+      console.log(clearItems);
+      
+      res.status(200).json(clearItems)
+      
+    }catch(err){
+      res.status(500).json('error')
+      console.log(err);
+      
+    }
+}

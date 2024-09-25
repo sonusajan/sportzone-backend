@@ -2,6 +2,8 @@ const express = require('express')
  const userController = require("../Controller/userController")
 const productController = require("../Controller/productController")
 const cartController = require("../Controller/cartController")
+const orderController = require("../Controller/orderController")
+const paymentController = require("../Controller/paymentContoller")
 const jwtAuthorization = require('../Middleware/jwtMiddleware')
 const multerConfig = require('../Middleware/multerMiddleware')
 
@@ -37,5 +39,33 @@ router.post('/user/removefromcart/:uid',cartController.removeFromCart)
 
 //googlelogin
 router.post('/user/googlelogin',userController.googleLogin)
+
+//edit User
+router.put('/user/edituser/:id',jwtAuthorization,multerConfig.single('profilepicture'),userController.editUser)
+
+//remove From Cart
+router.delete('/user/clearcart/:uid',jwtAuthorization,cartController.clearCart)
+
+
+//Order Products
+router.post('/user/orderproducts/:uid',jwtAuthorization,orderController.order)
+
+//
+router.post('/orders',paymentController.order)
+
+//get Orders
+router.get('/admin/getOrder',orderController.getOrders)
+
+//get user orders
+router.get('/user/getOrder/:uid',orderController.getuserOrder)
+
+//forget Password
+router.post('/user/forgetpassword',userController.forgetPassword)
+
+//reset password
+router.post('/user/resetpassword',userController.resetPassword)
+
+//show users
+router.get('/admin/showusers',userController.showUsers)
 
 module.exports = router
