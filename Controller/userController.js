@@ -101,10 +101,11 @@ exports.editUser = async(req,res)=>{
 
   try
     {    const {id} = req.params
-    const {fname,address,phone} = req.body
+    const {fname,lname,address,phone} = req.body
     const updateImage = req.file? req.file.filename:profilepicture
 
     const updatedUser = await users.findByIdAndUpdate({_id:id},{fname,
+        lname,
         address,
         phone,
         profilepicture:updateImage},{new:true})
