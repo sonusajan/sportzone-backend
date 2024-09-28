@@ -11,6 +11,14 @@ const multerConfig = require('../Middleware/multerMiddleware')
 
  //registration
  router.post('/user/register',userController.register)
+
+
+ //otp verification
+ router.post('/user/otpverify',userController.otpVerify)
+
+ //resend otp
+ router.post('/user/otpresend',userController.resendOtp)
+
  
  //login
  router.post('/user/login',userController.login)
@@ -67,5 +75,8 @@ router.post('/user/resetpassword',userController.resetPassword)
 
 //show users
 router.get('/admin/showusers',userController.showUsers)
+
+//get receipt
+router.post('/user/getreceipt',orderController.paymentReceipt)
 
 module.exports = router

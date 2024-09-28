@@ -36,6 +36,16 @@ const userSchema = new mongoose.Schema(
         },
         googleId:{
             type:String
+        },
+        otp:{
+            type:String
+        },
+        otpExpires:{
+            type:Date
+        },
+        isVerified:{
+            type:Boolean,
+            default:false
         }
         
 }

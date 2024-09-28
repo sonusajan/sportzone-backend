@@ -1,34 +1,105 @@
 const { passwordHashing, comparePassword } = require('../helpers/authHelper');
+const sendOtpMail = require('../helpers/otpSend');
 const sendPasswordMail = require('../helpers/sendmail');
 const users = require('../Models/userSchema')
 const jwt = require('jsonwebtoken')
-
+const otpGenerator = require('otp-generator')
 
 exports.register = async(req,res)=>{
     console.log("Inside register controller");
     
     try{
-        const{fname,lname,email,phone,address,password}=req.body
+        const{fname,lname,email,phone,address,password }=req.body
+        
+        
         if(!fname || !lname || !email || !phone || !address || !password)
         {
-            res.status(401).json('Please complete the Form')
+            res.status(406).json('Please complete the Form')
         }else{
         const existingUser = await users.findOne({email})
-        if(existingUser){
+        if(existingUser){ 
+
             res.status(406).json('Already Exisits!')
         }else{
+
+            const otp = otpGenerator.generate(6,{digits:true,upperCaseAlphabets:false,lowerCaseAlphabets:false,specialChars:false})
+            const otpExpires = Date.now()+1*60*1000           
+            await sendOtpMail(email,otp)
+           
             const hashedPassword = await passwordHashing(password)
+
             const newUser = new users({
-                fname,lname,email,phone,address,password:hashedPassword,profilepicture:""
+                fname,lname,email,phone,address,password:hashedPassword,profilepicture:"",otp:otp,otpExpires:otpExpires
             })
             await newUser.save()
             res.status(200).json(newUser)
-          }  } 
+        }}
        
     }catch(err){
-        res.status(500).json('Error',err) 
+        res.status(500).json('Error') 
+        console.log(err);
+        
     }
 }
+
+
+exports.otpVerify=async(req,res)=>{
+    try{
+      const {otp,email} = req.body
+      const user = await users.findOne({email})
+      if(!user){
+        res.status(406).json('email not valid')
+      }else{
+        
+        const timenow = Date.now()
+       if(timenow<user.otpExpires){
+        const mailotp = user.otp
+         if(mailotp == otp){
+            user.isVerified = true
+            user.otp=null
+            user.otpExpires=null
+            await user.save()
+            res.status(200).json('verified')
+        }else{
+            res.status(405).json('not matching')
+        }
+    }else{
+        res.status(407).json('time expired')
+    }
+      }
+      
+    }catch(err){
+        res.status(500).json('error')
+        console.log(err);
+        
+    }
+}
+
+
+exports.resendOtp=async(req,res)=>{
+    try{
+        const{email} = req.body
+        const user = await users.findOne({email})
+        const current = Date.now()
+        if(user.otpExpires < current){
+            const otp = otpGenerator.generate(6,{digits:true,upperCaseAlphabets:false,lowerCaseAlphabets:false,specialChars:false})
+            const otpExpires = Date.now()+10*60*1000           
+            await sendOtpMail(email,otp)
+            user.otp = otp
+            user.otpExpires = otpExpires
+            await user.save()
+            res.status(200).json(user)
+        }else{
+            res.status(406).json('not expired')
+        }
+
+    }catch(err){
+        res.status(500).json('error')
+        console.log(err);
+        
+    }
+}
+
 
 
 exports.login = async(req,res)=>{
@@ -51,6 +122,8 @@ exports.login = async(req,res)=>{
         }
     }
 }
+
+
 
 exports.googleLogin = async(req,res)=>{
     try{
@@ -97,6 +170,8 @@ exports.googleLogin = async(req,res)=>{
     }
 }
 
+
+
 exports.editUser = async(req,res)=>{
 
   try
@@ -122,6 +197,7 @@ exports.editUser = async(req,res)=>{
 }
 
 
+
 exports.forgetPassword = async(req,res)=>{
     const {email} = req.body
 
@@ -140,9 +216,10 @@ exports.forgetPassword = async(req,res)=>{
    }catch(err){
     res.status(500).json("Internal Server Error!")
     console.log(err);
-    
 }
 }
+
+
 
 
 exports.resetPassword=async(req,res)=>{
@@ -169,6 +246,7 @@ exports.resetPassword=async(req,res)=>{
         
      }
 }
+
 
 
 exports.showUsers=async(req,res)=>{
